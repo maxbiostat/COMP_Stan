@@ -1,8 +1,8 @@
 functions{
-  // Our implementation of things
-  real log_COM_Poisson(int k, real log_mu, real nu){
-    return k * log_mu - nu * lgamma(k + 1);
-  }
+  // Taken from https://github.com/paul-buerkner/brms/blob/master/inst/chunks/fun_com_poisson.stan
+  // log approximate normalizing constant of the COM poisson distribuion
+  // approximation based on doi:10.1007/s10463-017-0629-6
+  // Args: see log_Z_com_poisson()
   real log_Z_com_poisson_approx_new(real log_mu, real nu) {
     // Based on equations (4) and (31) of doi:10.1007/s10463-017-0629-6
     real nu2 = nu^2;
@@ -23,7 +23,10 @@ functions{
     ans = lcte + log_sum_exp(log_resids);
     return ans;
   }
-  real log_COM_Poisson_constant(real log_mu, real nu, real Eps, int n0_, int maxIter) {
+  real log_COM_Poisson(int k, real log_mu, real nu){
+    return k * log_mu - nu * lgamma(k + 1);
+  }
+  real log_COMP_constant_adaptive(real log_mu, real nu, real Eps, int n0_, int maxIter) {
     vector[maxIter+1] storeVal;
     real leps = log(Eps) + log(2);
     int n = 1;
@@ -48,7 +51,6 @@ functions{
       storeVal[n] = old_term;
       if (n >= maxIter) return(log_sum_exp(storeVal[:n]));
     }
-    
     while ( (old_term - log_diff_exp(0, new_term - old_term)) > leps  )  {
       // print("n:", n,  " Delta:", old_term - log_diff_exp(0, new_term - old_term));
       old_term = new_term;
@@ -59,22 +61,19 @@ functions{
       if (n >= maxIter) return(log_sum_exp(storeVal[:n]));
     }
     storeVal[n+1] = old_term - log_diff_exp(0, new_term - old_term) - log(2);
-    
     return log_sum_exp(storeVal[:(n+1)]);
   }
-  // Taken from https://github.com/paul-buerkner/brms/blob/master/inst/chunks/fun_com_poisson.stan
   // log normalizing constant of the COM Poisson distribution
   // implementation inspired by code of Ben Goodrich
   // improved following suggestions of Sebastian Weber (#892)
   // Args:
   //   log_mu: log location parameter
   //   shape: positive shape parameter
-  real log_Z_com_poisson(real log_mu, real nu) {
-    real log_Z; 
+  real log_Z_com_poisson(real log_mu, real nu, int M, int num_terms, real eps) {
+    real log_Z;
+    real leps = log(eps);
     int k = 2;
-    int M = 10000;
     int converged = 0;
-    int num_terms = 50;
     if (nu == 1) {
       return exp(log_mu);
     }
@@ -85,68 +84,54 @@ functions{
     if (nu == positive_infinity()) {
       reject("nu must be finite");
     }
-    // if (log_mu * nu >= log(1.5) && nu >= 1) {
-      //   return log_Z_com_poisson_approx(log_mu, nu);
-      // }
-      // direct computation of the truncated series
-      // check if the Mth term of the series is small enough
-      // if (M * log_mu - nu*lgamma(M + 1) > -36.0) {
-        //   reject("nu is too close to zero.");
-        // }
-        // first 2 terms of the series
-        log_Z = log1p_exp(log_mu);   
-        while (converged == 0) {
-          // adding terms in batches simplifies the AD tape
-          vector[num_terms + 1] log_Z_terms;
-          int i = 1;
-          log_Z_terms[1] = log_Z;
-          while (i < num_terms) {
-            log_Z_terms[i + 1] = k * log_mu - nu*lgamma(k + 1);
-            k += 1;
-            if (log_Z_terms[i + 1] <= -36.0) {
-              converged = 1;
-              break;
-            }
-            i += 1;
-          }
-          log_Z = log_sum_exp(log_Z_terms[1:i]);
-        }
-        return log_Z;
-  }
-  
-  /* Comparison stuff */
-  real  signum(real x) {
-    real ans;
-    if(x < 0){
-      ans = -1;
-    }else{
-      if(x == 0){
-        ans = 0;
-      }else{
-        ans = 1;
-      }
+    if (log_mu * nu >= log(1.5) && log_mu >= log(1.5)) {
+      return log_Z_com_poisson_approx_new(log_mu, nu);
     }
-    return ans;
+    // direct computation of the truncated series
+    // check if the Mth term of the series is small enough
+    if ( ( M * log_mu - nu*lgamma(M + 1) ) > leps) {
+      reject("nu is too close to zero.");
+    }
+    log_Z = log_COMP_constant_adaptive(log_mu, nu,  eps, 0, M);
+    return log_Z;
   }
-  real robust_difference(real x, real y){
-    real sgn = signum(x-y);
-    real m = min({x, y});
-    real M = max({x, y});
-    return(sgn * exp(log_diff_exp(M, m)));
+  // COM Poisson log-PMF for a single response (log parameterization)
+  // Args: 
+  //   y: the response value 
+  //   log_mu: log location parameter
+  //   shape: positive shape parameter
+  real com_poisson_log_lpmf(int y, real log_mu, real nu, real logZ) {
+    if (nu == 1) return poisson_log_lpmf(y | log_mu);
+    return nu * (y * log_mu - lgamma(y + 1)) - logZ;
+  }
+  // COM Poisson log-PMF for a single response
+  real com_poisson_lpmf(int y, real mu, real nu, real logZ) {
+    if (nu == 1) return poisson_lpmf(y | mu);
+    return com_poisson_log_lpmf(y | log(mu), nu, logZ);
   }
 }
 data{
-  real log_mu;
-  real<lower=0> nu;
-  real<lower=0> eps;
+  int<lower=0> K;
+  int<lower=0> n[K];
+  int<lower=0> y[K];
+  int<lower=0> N;
+  real<lower=0> s_mu;
+  real<lower=0> r_mu;
+  real<lower=0> nu_sd;
   int<lower=0> M;
-  real true_value;
+  real<lower=0> eps;
+  int<lower=0> batch_size;
 }
-generated quantities {
-  real lZ_approx_new = log_Z_com_poisson_approx_new(log_mu, nu);
-  real lZ_brute_force_new = log_COM_Poisson_constant(log_mu, nu, eps, 0, M);
-  real lZ_brute_force_brms = log_Z_com_poisson(log_mu, nu);
-  real diff_approx_new = robust_difference(true_value, lZ_approx_new);
-  real diff_brute_force_new = robust_difference(true_value, lZ_brute_force_new);
-  real diff_brute_force_brms = robust_difference(true_value, lZ_brute_force_brms);
+parameters{
+  real mu;
+  real<lower=0> nu;
+}
+transformed parameters{
+  real log_norm_const = log_Z_com_poisson(log(mu), nu, M, batch_size, eps);
+}
+model{
+  mu ~ gamma(s_mu, r_mu);
+  nu ~ normal(0, nu_sd);
+  // Likelihood
+  for(k in 1:K) target += n[k] * com_poisson_lpmf(y[k] | mu, nu, log_norm_const);
 }

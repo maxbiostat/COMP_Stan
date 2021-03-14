@@ -2,7 +2,6 @@ library(cmdstanr)
 library(rstan)
 ################
 stanfit <- function(fit) rstan::read_stan_csv(fit$output_files())
-source("testing_aux.r")
 COMP_lpdf <- function(k, theta){
   lambda <- theta[1]
   nu <- theta[2]
@@ -11,8 +10,8 @@ COMP_lpdf <- function(k, theta){
   )
 }
 #################
-Mu <- 2000
-Nu <- .5
+Mu <- 5
+Nu <- 2
 Theta <- c(Mu, Nu)
 Eps <- 1E-16
 M <- 2E5
@@ -23,7 +22,7 @@ if(Nu == 1){
     TrueValue <- log(besselI(2*sqrt(Mu), nu = 0))
   }else{
     lps <- COMP_lpdf(k = 0:M, theta = Theta)
-    TrueValue <- log_sum_exp(lps)
+    TrueValue <- matrixStats::logSumExp(lps)
   }
 }
 ## Should the approximation kick in ?
@@ -35,7 +34,8 @@ test.data <- list(
   log_mu = log(Mu),
   nu = Nu,
   eps = Eps,
-  M = M
+  M = M,
+  true_value = TrueValue
 )
 
 raw <- implementations$sample(data = test.data, chains = 1, 
@@ -44,17 +44,11 @@ results <- stanfit(raw)
 out <- extract(results)
 out$lp__ <- NULL
 
-out
 TrueValue
+out
 
-## Absolute error
+source("testing_aux.r")
 robust_difference(TrueValue, out$lZ_approx_new)
 robust_difference(TrueValue, out$lZ_brute_force_new)
-robust_difference(TrueValue, out$lZ_approx_brms)
 robust_difference(TrueValue, out$lZ_brute_force_brms)
 
-
-relative_difference(TrueValue, out$lZ_approx_new)
-relative_difference(TrueValue, out$lZ_brute_force_new)
-relative_difference(TrueValue, out$lZ_approx_brms)
-relative_difference(TrueValue, out$lZ_brute_force_brms)

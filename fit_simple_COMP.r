@@ -14,8 +14,12 @@ compress_counts <- function(x){
   )
 }
 ####
-Mu <- 200
+Mu <- 5
 Nu <- 2
+truelogZ <- log(besselI(2*sqrt(Mu), nu = 0))
+epsilon <- 1E-16
+MaxIter <- 1E4
+
 ##
 nobs <- 1000
 set.seed(666)
@@ -32,37 +36,16 @@ stan.data <- list(
   s_mu = .01,
   r_mu = .01,
   nu_sd = 1,
-  eps = 1E-16,
-  M = 10000
+  eps = epsilon,
+  M = MaxIter,
+  batch_size = 50
 )
-
-############
-## BRMS stuff
-brms_impl_old <- cmdstanr::cmdstan_model("stan/brms_comp_implementation.stan")
-
-opt_brms_old <- brms_impl_old$optimize(data = stan.data)
-opt_brms_old$mle()
-
-
-brms_impl_new <- cmdstanr::cmdstan_model("stan/brms_comp_implementation_corrected.stan")
-
-opt_brms_new <- brms_impl_new$optimize(data = stan.data)
-
 iterations <- 500
-brms.raw <-
-  brms_impl_old$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
-                     parallel_chains = 4, iter_warmup = iterations,
-                     adapt_delta = .90,  max_treedepth = 12,
-                     iter_sampling = iterations, show_messages = FALSE)
-brms.mcmc <- stanfit(brms.raw)
-
-brms.mcmc
-
-check_hmc_diagnostics(brms.mcmc)
+############
 
 ## New proposal
 
-adaptive_impl <- cmdstanr::cmdstan_model("stan/adapSum_comp_implementation.stan")
+adaptive_impl <- cmdstanr::cmdstan_model("stan/adapSum_COMP.stan")
 
 opt_adaptive <- adaptive_impl$optimize(data = stan.data)
 
@@ -78,4 +61,36 @@ adaptive.raw <-
 adaptive.mcmc <- stanfit(adaptive.raw)
 adaptive.mcmc
 
-log(besselI(2*sqrt(Mu), nu = 0))
+
+## New proposal with hybrid algorithm
+
+adaptive_hybrid <- cmdstanr::cmdstan_model("stan/adapSum_COMP_hybrid.stan")
+
+opt_adaptive <- adaptive_impl$optimize(data = stan.data)
+
+adaptive_hybrid.raw <-
+  adaptive_hybrid$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
+                       parallel_chains = 4, iter_warmup = iterations,
+                       adapt_delta = .90,  max_treedepth = 10,
+                       iter_sampling = iterations, show_messages = FALSE)
+adaptive_hybrid.mcmc <- stanfit(adaptive_hybrid.raw)
+adaptive_hybrid.mcmc
+
+## BRMS stuff
+# brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
+
+# opt_brms <- brms_impl$optimize(data = stan.data)
+# opt_brms$mle()
+
+# sampling(object = brms_comp, data = stan.data, iter = iterations, chains = 1)
+
+# brms.raw <-
+#   brms_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 1,
+#                      parallel_chains = 4, iter_warmup = iterations,
+#                      adapt_delta = .90,  max_treedepth = 12,
+#                      iter_sampling = iterations, show_messages = FALSE)
+# brms.mcmc <- stanfit(brms.raw)
+# 
+# brms.mcmc
+# 
+# check_hmc_diagnostics(brms.mcmc)
