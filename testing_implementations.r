@@ -10,7 +10,7 @@ COMP_lpdf <- function(k, theta){
   )
 }
 #################
-Mu <- 5
+Mu <- 1
 Nu <- 2
 Theta <- c(Mu, Nu)
 Eps <- 1E-16
@@ -49,6 +49,6 @@ out
 
 source("testing_aux.r")
 robust_difference(TrueValue, out$lZ_approx_new)
-robust_difference(TrueValue, out$lZ_brute_force_new)
-robust_difference(TrueValue, out$lZ_brute_force_brms)
+robust_difference(TrueValue, out$lZ_brute_force_new[1])
+robust_difference(TrueValue, out$lZ_brute_force_brms[1])
 

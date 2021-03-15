@@ -23,7 +23,7 @@ functions{
     ans = lcte + log_sum_exp(log_resids);
     return ans;
   }
-  real log_COM_Poisson_constant(real log_mu, real nu, real Eps, int n0_, int maxIter) {
+  real [] log_COM_Poisson_constant(real log_mu, real nu, real Eps, int n0_, int maxIter) {
     vector[maxIter+1] storeVal;
     real leps = log(Eps) + log(2);
     int n = 1;
@@ -46,7 +46,7 @@ functions{
       n0 += 1;
       n += 1;
       storeVal[n] = old_term;
-      if (n >= maxIter) return(log_sum_exp(storeVal[:n]));
+      if (n >= maxIter) return({log_sum_exp(storeVal[:n]), n});
     }
     
     while ( (old_term - log_diff_exp(0, new_term - old_term)) > leps  )  {
@@ -56,11 +56,11 @@ functions{
       n0 += 1;
       n += 1;
       storeVal[n] = old_term;
-      if (n >= maxIter) return(log_sum_exp(storeVal[:n]));
+      if (n >= maxIter) return({log_sum_exp(storeVal[:n]), n});
     }
     storeVal[n+1] = old_term - log_diff_exp(0, new_term - old_term) - log(2);
     
-    return log_sum_exp(storeVal[:(n+1)]);
+    return {log_sum_exp(storeVal[:(n+1)]), n};
   }
   // Taken from https://github.com/paul-buerkner/brms/blob/master/inst/chunks/fun_com_poisson.stan
   // log normalizing constant of the COM Poisson distribution
@@ -69,14 +69,14 @@ functions{
   // Args:
   //   log_mu: log location parameter
   //   shape: positive shape parameter
-  real log_Z_com_poisson(real log_mu, real nu) {
+  real[] log_Z_com_poisson(real log_mu, real nu) {
     real log_Z; 
     int k = 2;
     int M = 10000;
     int converged = 0;
     int num_terms = 50;
     if (nu == 1) {
-      return exp(log_mu);
+      return {exp(log_mu), 0};
     }
     // nu == 0 or Inf will fail in this parameterization
     if (nu <= 0) {
@@ -85,33 +85,25 @@ functions{
     if (nu == positive_infinity()) {
       reject("nu must be finite");
     }
-    // if (log_mu * nu >= log(1.5) && nu >= 1) {
-      //   return log_Z_com_poisson_approx(log_mu, nu);
-      // }
-      // direct computation of the truncated series
-      // check if the Mth term of the series is small enough
-      // if (M * log_mu - nu*lgamma(M + 1) > -36.0) {
-        //   reject("nu is too close to zero.");
-        // }
-        // first 2 terms of the series
-        log_Z = log1p_exp(log_mu);   
-        while (converged == 0) {
-          // adding terms in batches simplifies the AD tape
-          vector[num_terms + 1] log_Z_terms;
-          int i = 1;
-          log_Z_terms[1] = log_Z;
-          while (i < num_terms) {
-            log_Z_terms[i + 1] = k * log_mu - nu*lgamma(k + 1);
-            k += 1;
-            if (log_Z_terms[i + 1] <= -36.0) {
-              converged = 1;
-              break;
-            }
-            i += 1;
-          }
-          log_Z = log_sum_exp(log_Z_terms[1:i]);
+    // first 2 terms of the series
+    log_Z = log1p_exp(log_mu);   
+    while (converged == 0) {
+      // adding terms in batches simplifies the AD tape
+      vector[num_terms + 1] log_Z_terms;
+      int i = 1;
+      log_Z_terms[1] = log_Z;
+      while (i < num_terms) {
+        log_Z_terms[i + 1] = k * log_mu - nu*lgamma(k + 1);
+        k += 1;
+        if (log_Z_terms[i + 1] <= -36.0) {
+          converged = 1;
+          break;
         }
-        return log_Z;
+        i += 1;
+      }
+      log_Z = log_sum_exp(log_Z_terms[1:i]);
+    }
+    return {log_Z, k};
   }
   
   /* Comparison stuff */
@@ -144,9 +136,11 @@ data{
 }
 generated quantities {
   real lZ_approx_new = log_Z_com_poisson_approx_new(log_mu, nu);
-  real lZ_brute_force_new = log_COM_Poisson_constant(log_mu, nu, eps, 0, M);
-  real lZ_brute_force_brms = log_Z_com_poisson(log_mu, nu);
+  real lZ_brute_force_new[2] = log_COM_Poisson_constant(log_mu, nu, eps, 0, M);
+  real lZ_brute_force_brms[2] = log_Z_com_poisson(log_mu, nu);
+  real N_adapt = lZ_brute_force_new[2];
+  real N_brms = lZ_brute_force_brms[2];
   real diff_approx_new = robust_difference(true_value, lZ_approx_new);
-  real diff_brute_force_new = robust_difference(true_value, lZ_brute_force_new);
-  real diff_brute_force_brms = robust_difference(true_value, lZ_brute_force_brms);
+  real diff_brute_force_new = robust_difference(true_value, lZ_brute_force_new[1]);
+  real diff_brute_force_brms = robust_difference(true_value, lZ_brute_force_brms[1]);
 }
