@@ -44,7 +44,7 @@ functions{
     if (nu == positive_infinity()) {
       reject("nu must be finite");
     }
-    if (log_mu * nu >= log(1.5) && log_mu >= log(1.5)) {
+    if (log_mu * nu >= log(1.5) && nu > 1) {
       return log_Z_com_poisson_approx_new(log_mu, nu);
     }
     // direct computation of the truncated series

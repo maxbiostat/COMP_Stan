@@ -16,7 +16,14 @@ compress_counts <- function(x){
 ####
 Mu <- 5
 Nu <- 2
-truelogZ <- log(besselI(2*sqrt(Mu), nu = 0))
+if(nu == 1){
+  truelogZ <- Mu
+}else{
+  if(nu == 2){
+    truelogZ <- log(besselI(2*sqrt(Mu), nu = 0))
+  }
+}
+
 epsilon <- 1E-16
 MaxIter <- 1E4
 
@@ -49,8 +56,6 @@ adaptive_impl <- cmdstanr::cmdstan_model("stan/adapSum_COMP.stan")
 
 opt_adaptive <- adaptive_impl$optimize(data = stan.data)
 
-opt_brms_old$mle()
-opt_brms_new$mle()
 opt_adaptive$mle()
 
 adaptive.raw <-
@@ -59,14 +64,19 @@ adaptive.raw <-
                        adapt_delta = .90,  max_treedepth = 10,
                        iter_sampling = iterations, show_messages = FALSE)
 adaptive.mcmc <- stanfit(adaptive.raw)
+
 adaptive.mcmc
 
+pairs(adaptive.mcmc, pars = c("mu", "nu"))
+check_hmc_diagnostics(adaptive.mcmc)
 
 ## New proposal with hybrid algorithm
 
 adaptive_hybrid <- cmdstanr::cmdstan_model("stan/adapSum_COMP_hybrid.stan")
 
-opt_adaptive <- adaptive_impl$optimize(data = stan.data)
+opt_adaptive_hybrid <- adaptive_hybrid$optimize(data = stan.data)
+
+opt_adaptive_hybrid$mle()
 
 adaptive_hybrid.raw <-
   adaptive_hybrid$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
@@ -78,7 +88,7 @@ adaptive_hybrid.mcmc
 
 ## BRMS stuff
 # brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
-
+# 
 # opt_brms <- brms_impl$optimize(data = stan.data)
 # opt_brms$mle()
 
