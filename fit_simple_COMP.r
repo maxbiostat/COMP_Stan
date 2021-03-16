@@ -21,7 +21,7 @@ Nu <- .2
 if(Nu == 1){
   truelogZ <- Mu
 }else{
-  if(nu == 2){
+  if(Nu == 2){
     truelogZ <- log(besselI(2*sqrt(Mu), nu = 0))
   }
 }
