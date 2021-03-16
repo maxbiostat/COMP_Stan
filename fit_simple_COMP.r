@@ -65,8 +65,6 @@ adaptive.raw <-
                        iter_sampling = iterations, show_messages = FALSE)
 adaptive.mcmc <- stanfit(adaptive.raw)
 
-adaptive.mcmc
-
 pairs(adaptive.mcmc, pars = c("mu", "nu"))
 check_hmc_diagnostics(adaptive.mcmc)
 
@@ -84,23 +82,24 @@ adaptive_hybrid.raw <-
                        adapt_delta = .90,  max_treedepth = 10,
                        iter_sampling = iterations, show_messages = FALSE)
 adaptive_hybrid.mcmc <- stanfit(adaptive_hybrid.raw)
-adaptive_hybrid.mcmc
 
 ## BRMS stuff
-# brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
-# 
-# opt_brms <- brms_impl$optimize(data = stan.data)
-# opt_brms$mle()
+brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
 
-# sampling(object = brms_comp, data = stan.data, iter = iterations, chains = 1)
+opt_brms <- brms_impl$optimize(data = stan.data)
+opt_brms$mle()
 
-# brms.raw <-
-#   brms_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 1,
-#                      parallel_chains = 4, iter_warmup = iterations,
-#                      adapt_delta = .90,  max_treedepth = 12,
-#                      iter_sampling = iterations, show_messages = FALSE)
-# brms.mcmc <- stanfit(brms.raw)
-# 
-# brms.mcmc
-# 
-# check_hmc_diagnostics(brms.mcmc)
+brms.raw <-
+  brms_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
+                     parallel_chains = 4, iter_warmup = iterations,
+                     adapt_delta = .90,  max_treedepth = 12,
+                     iter_sampling = iterations, show_messages = FALSE)
+brms.mcmc <- stanfit(brms.raw)
+
+check_hmc_diagnostics(brms.mcmc)
+
+#### 
+
+adaptive.mcmc
+# adaptive_hybrid.mcmc
+brms.mcmc

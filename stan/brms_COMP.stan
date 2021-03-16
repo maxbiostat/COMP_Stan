@@ -29,7 +29,7 @@ functions{
   // Args:
   //   log_mu: log location parameter
   //   shape: positive shape parameter
-  real log_Z_com_poisson(real log_mu, real nu, int M, int num_terms, real eps) {
+    real log_Z_com_poisson(real log_mu, real nu, int M, int num_terms, real eps) {
     real log_Z;
     real leps = log(eps);
     int k = 2;
@@ -44,23 +44,23 @@ functions{
     if (nu == positive_infinity()) {
       reject("nu must be finite");
     }
-    if (log_mu * nu >= log(1.5) && nu > 1) {
+    if (log_mu * nu >= log(1.5) && nu >= 1.0) {
       return log_Z_com_poisson_approx_new(log_mu, nu);
     }
     // direct computation of the truncated series
     // check if the Mth term of the series is small enough
-    if ( ( M * log_mu - nu*lgamma(M + 1) ) > leps) {
+    if ( M * log_mu - nu*lgamma(M + 1) > leps) {
       reject("nu is too close to zero.");
     }
     // first 2 terms of the series
-    log_Z = log1p_exp(log_mu);   
+    log_Z = log1p_exp(nu * log_mu);
     while (converged == 0) {
-      print("log(mu)=", log_mu, " nu=", nu ," k=", k);
+      if(k >= M) break;
       // adding terms in batches simplifies the AD tape
       vector[num_terms + 1] log_Z_terms;
       int i = 1;
       log_Z_terms[1] = log_Z;
-      while (i < num_terms) {
+      while (i <= num_terms) {
         log_Z_terms[i + 1] = k * log_mu - nu*lgamma(k + 1);
         k += 1;
         if (log_Z_terms[i + 1] <= leps) {
@@ -80,7 +80,7 @@ functions{
   //   shape: positive shape parameter
   real com_poisson_log_lpmf(int y, real log_mu, real nu, real logZ) {
     if (nu == 1) return poisson_log_lpmf(y | log_mu);
-    return nu * (y * log_mu - lgamma(y + 1)) - logZ;
+    return y * log_mu - nu*lgamma(y + 1) - logZ;
   }
   // COM Poisson log-PMF for a single response
   real com_poisson_lpmf(int y, real mu, real nu, real logZ) {
