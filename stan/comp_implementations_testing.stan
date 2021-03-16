@@ -3,6 +3,18 @@ functions{
   real log_COM_Poisson(int k, real log_mu, real nu){
     return k * log_mu - nu * lgamma(k + 1);
   }
+  real log_Z_com_poisson_approx(real log_mu, real nu) {
+    real nu_mu = nu * exp(log_mu); 
+    real nu2 = nu^2;
+    // first 4 terms of the residual series
+    real log_sum_resid = log1p(
+      nu_mu^(-1) * (nu2 - 1) / 24 + 
+      nu_mu^(-2) * (nu2 - 1) / 1152 * (nu2 + 23) +
+      nu_mu^(-3) * (nu2 - 1) / 414720 * (5 * nu2^2 - 298 * nu2 + 11237)
+    );
+    return nu_mu + log_sum_resid  - 
+      ((log(2 * pi()) + log_mu) * (nu - 1) / 2 + log(nu) / 2);
+  }
   real log_Z_com_poisson_approx_new(real log_mu, real nu) {
     // Based on equations (4) and (31) of doi:10.1007/s10463-017-0629-6
     real nu2 = nu^2;
@@ -69,10 +81,9 @@ functions{
   // Args:
   //   log_mu: log location parameter
   //   shape: positive shape parameter
-  real[] log_Z_com_poisson(real log_mu, real nu, real eps) {
+  real[] log_Z_com_poisson(real log_mu, real nu, real eps, int M) {
     real log_Z; 
     int k = 2;
-    int M = 10000;
     real leps = log(eps);
     int converged = 0;
     int num_terms = 50;
@@ -137,9 +148,10 @@ data{
   real true_value;
 }
 generated quantities {
+  real lZ_approx_old = log_Z_com_poisson_approx(log_mu, nu);
   real lZ_approx_new = log_Z_com_poisson_approx_new(log_mu, nu);
   real lZ_brute_force_new[2] = log_COM_Poisson_constant(log_mu, nu, eps, 0, M);
-  real lZ_brute_force_brms[2] = log_Z_com_poisson(log_mu, nu, eps);
+  real lZ_brute_force_brms[2] = log_Z_com_poisson(log_mu, nu, eps, M);
   real N_adapt = lZ_brute_force_new[2];
   real N_brms = lZ_brute_force_brms[2];
   real diff_approx_new = robust_difference(true_value, lZ_approx_new);
