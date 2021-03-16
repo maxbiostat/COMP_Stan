@@ -53,7 +53,7 @@ functions{
       reject("nu is too close to zero.");
     }
     // first 2 terms of the series
-    log_Z = log1p_exp(nu * log_mu);
+    log_Z = log1p_exp(log_mu);
     while (converged == 0) {
       if(k >= M) break;
       // adding terms in batches simplifies the AD tape
