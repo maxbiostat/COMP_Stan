@@ -13,8 +13,9 @@ functions{
     real c_2 = (nu2-1)/1152*(nu2 + 23);
     real c_3 = (nu2-1)/414720* (5*square(nu2) - 298*nu2 + 11237);
     if(nu < 1){
-      print("Approximation doesn't work great when nu < 1, returning without residuals");
-      return(lcte);
+      reject("Approximation doesn't work great when nu < 1");
+      // print("Approximation doesn't work great when nu < 1, returning without residuals");
+      // return(lcte);
     } 
     log_resids[1] = 0;
     log_resids[2] = log(c_1) - 1 * (log(nu) + log_mu/nu);
