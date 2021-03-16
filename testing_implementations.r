@@ -10,7 +10,7 @@ COMP_lpdf <- function(k, theta){
   )
 }
 #################
-Mu <- 1
+Mu <- 5
 Nu <- 2
 Theta <- c(Mu, Nu)
 Eps <- 1E-16

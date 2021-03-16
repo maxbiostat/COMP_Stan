@@ -69,10 +69,11 @@ functions{
   // Args:
   //   log_mu: log location parameter
   //   shape: positive shape parameter
-  real[] log_Z_com_poisson(real log_mu, real nu) {
+  real[] log_Z_com_poisson(real log_mu, real nu, real eps) {
     real log_Z; 
     int k = 2;
     int M = 10000;
+    real leps = log(eps);
     int converged = 0;
     int num_terms = 50;
     if (nu == 1) {
@@ -86,16 +87,17 @@ functions{
       reject("nu must be finite");
     }
     // first 2 terms of the series
-    log_Z = log1p_exp(log_mu);   
+    log_Z = log1p_exp(nu * log_mu);
     while (converged == 0) {
+      if(k >= M) break;
       // adding terms in batches simplifies the AD tape
       vector[num_terms + 1] log_Z_terms;
       int i = 1;
       log_Z_terms[1] = log_Z;
-      while (i < num_terms) {
+      while (i <= num_terms) {
         log_Z_terms[i + 1] = k * log_mu - nu*lgamma(k + 1);
         k += 1;
-        if (log_Z_terms[i + 1] <= -36.0) {
+        if (log_Z_terms[i + 1] <= leps) {
           converged = 1;
           break;
         }
@@ -137,7 +139,7 @@ data{
 generated quantities {
   real lZ_approx_new = log_Z_com_poisson_approx_new(log_mu, nu);
   real lZ_brute_force_new[2] = log_COM_Poisson_constant(log_mu, nu, eps, 0, M);
-  real lZ_brute_force_brms[2] = log_Z_com_poisson(log_mu, nu);
+  real lZ_brute_force_brms[2] = log_Z_com_poisson(log_mu, nu, eps);
   real N_adapt = lZ_brute_force_new[2];
   real N_brms = lZ_brute_force_brms[2];
   real diff_approx_new = robust_difference(true_value, lZ_approx_new);
