@@ -103,3 +103,6 @@ check_hmc_diagnostics(brms.mcmc)
 adaptive.mcmc
 # adaptive_hybrid.mcmc
 brms.mcmc
+
+adaptive.raw$time()
+brms.raw$time()
