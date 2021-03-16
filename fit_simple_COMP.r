@@ -14,7 +14,7 @@ compress_counts <- function(x){
   )
 }
 ####
-Mu <- 1.5
+Mu <- .5
 Nu <- .2
 #Mus <- c(.5, 5, 15, 50)
 #Nus <- c(.2, .5, 1, 1.5, 2)
@@ -31,7 +31,7 @@ MaxIter <- 1E4
 
 ##
 nobs <- 1000
-set.seed(666)
+# set.seed(666)
 Y <- COMPoissonReg::rcmp(n = nobs, lambda = Mu, nu = Nu)
 hist(Y, probability = TRUE)
 
@@ -68,22 +68,6 @@ adaptive.raw <-
 adaptive.mcmc <- stanfit(adaptive.raw)
 
 pairs(adaptive.mcmc, pars = c("mu", "nu"))
-
-
-## New proposal with hybrid algorithm
-
-adaptive_hybrid <- cmdstanr::cmdstan_model("stan/adapSum_COMP_hybrid.stan")
-
-opt_adaptive_hybrid <- adaptive_hybrid$optimize(data = stan.data)
-
-opt_adaptive_hybrid$mle()
-
-adaptive_hybrid.raw <-
-  adaptive_hybrid$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
-                       parallel_chains = 4, iter_warmup = iterations,
-                       adapt_delta = .90,  max_treedepth = 10,
-                       iter_sampling = iterations, show_messages = FALSE)
-adaptive_hybrid.mcmc <- stanfit(adaptive_hybrid.raw)
 
 ## BRMS stuff
 brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
