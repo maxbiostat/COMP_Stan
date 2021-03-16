@@ -14,9 +14,11 @@ compress_counts <- function(x){
   )
 }
 ####
-Mu <- 5
-Nu <- 2
-if(nu == 1){
+Mu <- 1.5
+Nu <- .2
+#Mus <- c(.5, 5, 15, 50)
+#Nus <- c(.2, .5, 1, 1.5, 2)
+if(Nu == 1){
   truelogZ <- Mu
 }else{
   if(nu == 2){
@@ -66,7 +68,7 @@ adaptive.raw <-
 adaptive.mcmc <- stanfit(adaptive.raw)
 
 pairs(adaptive.mcmc, pars = c("mu", "nu"))
-check_hmc_diagnostics(adaptive.mcmc)
+
 
 ## New proposal with hybrid algorithm
 
@@ -96,13 +98,16 @@ brms.raw <-
                      iter_sampling = iterations, show_messages = FALSE)
 brms.mcmc <- stanfit(brms.raw)
 
-check_hmc_diagnostics(brms.mcmc)
+pairs(brms.mcmc, pars = c("mu", "nu"))
 
 #### 
 
 adaptive.mcmc
 # adaptive_hybrid.mcmc
 brms.mcmc
+
+check_hmc_diagnostics(adaptive.mcmc)
+check_hmc_diagnostics(brms.mcmc)
 
 adaptive.raw$time()
 brms.raw$time()
