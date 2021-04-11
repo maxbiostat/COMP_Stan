@@ -26,7 +26,7 @@ read_ess_rdata <- function(fname){
   return(out)
 }
 ##########
-rdatas <- system("ls *.RData", intern = TRUE)
+rdatas <- system("ls data/*.RData", intern = TRUE)
 # fname <- rdatas[1]
 all.res <- do.call(rbind, lapply(rdatas, read_ess_rdata))
 head(all.res)
@@ -34,8 +34,10 @@ all.res$parameterComb <- paste0("mu_", all.res$mu, "_nu_", all.res$nu)
 library(ggplot2)
 
 ggplot(all.res, 
-       aes(x = implementation, y = value/total, fill = implementation) ) +
-  geom_violin(alpha = 0.4) +
+       aes(x = implementation, y = value/(warmup + sampling),
+           fill = implementation) ) +
+  geom_boxplot(alpha = 0.4) +
+  theme_bw(base_size = 16) +
   theme(legend.position = "none")+
   facet_wrap(parameterComb~., scales = "free_y") +
   scale_y_continuous("ESS per second")
