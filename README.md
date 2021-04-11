@@ -30,10 +30,10 @@ When doing MCMC we will be looking at
 The first bar to clear is that of correctly returning the answer within the error bound requested.
 Of course, not every method comes with mathematical guarantees (e.g. the asymptotic expansion of Gaunt et al. makes no promises about using finitely many terms).
 It is nevertheless useful to record whether each method/implementation got the answer within a certain tolerance in order to gauge their overall accuracy under many scenarios.
-This can be found in [testing_implementations.r](https://github.com/maxbiostat/COMP_Stan/testing_implementations.r).
+This can be found in [testing_implementations.r](https://github.com/maxbiostat/COMP_Stan/blob/main/testing_implementations.r).
 
 ## Step 1: MCMC
 
 The next step is to see what happens when these implementations are actually used in MCMC.
-This is implemented in [fit_simple_COMP.r](https://github.com/maxbiostat/COMP_Stan/fit_simple_COMP.r) for a single run and [simu_study_COMP.r](https://github.com/maxbiostat/COMP_Stan/simu_study_COMP.r) for a simulation study-style script.
-After a few `.RData` have been accumulated by running the replication code for the desired combinations of parameters, [analyse_COMP_simu_study.r](https://github.com/maxbiostat/COMP_Stan/analyse_COMP_simu_study.r) can be used to analyse the results.
+This is implemented in [fit_simple_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/fit_simple_COMP.r) for a single run and [simu_study_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/simu_study_COMP.r) for a simulation study-style script.
+After a few `.RData` have been accumulated by running the replication code for the desired combinations of parameters, [analyse_COMP_simu_study.r](https://github.com/maxbiostat/COMP_Stan/blob/main/analyse_COMP_simu_study.r) can be used to analyse the results.
