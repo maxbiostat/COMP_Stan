@@ -15,7 +15,7 @@ compress_counts <- function(x){
 }
 ####
 Mu <- 5
-Nu <- 2
+Nu <- .5
 epsilon <- 1E-16
 MaxIter <- 1E4
 

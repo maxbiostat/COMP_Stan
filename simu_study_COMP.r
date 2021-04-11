@@ -144,8 +144,8 @@ parse_simu <- function(simu){
   )
 }
 
-true.Mu <- 10
-true.Nu <- .5
+true.Mu <- 15
+true.Nu <- .2
 simu <-  do_batch(n_reps = 10,
                   Mu = true.Mu, Nu = true.Nu, nobs = 1000,
                     epsilon = 1E-16,
@@ -171,6 +171,13 @@ ggplot(subset(parsed$performance, variable == "mean"),
 
 ESS <- subset(parsed$performance, variable == "n_eff")
 ESS <- merge(ESS, parsed$timings, by = c("implementation", "replicate"))
+
+ggplot(ESS, 
+       aes(x = implementation, y = value,
+           fill = implementation) ) +
+  geom_boxplot(alpha = .4) +
+  theme_bw(base_size = 16) + 
+  scale_y_continuous("ESS")
 
 ggplot(ESS, 
        aes(x = implementation, y = value/(warmup + sampling),
