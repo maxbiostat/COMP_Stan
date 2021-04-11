@@ -14,18 +14,8 @@ compress_counts <- function(x){
   )
 }
 ####
-Mu <- .5
-Nu <- .2
-#Mus <- c(.5, 5, 15, 50)
-#Nus <- c(.2, .5, 1, 1.5, 2)
-if(Nu == 1){
-  truelogZ <- Mu
-}else{
-  if(Nu == 2){
-    truelogZ <- log(besselI(2*sqrt(Mu), nu = 0))
-  }
-}
-
+Mu <- 5
+Nu <- 2
 epsilon <- 1E-16
 MaxIter <- 1E4
 
@@ -46,52 +36,98 @@ stan.data <- list(
   r_mu = .01,
   nu_sd = 1,
   eps = epsilon,
-  M = MaxIter,
-  batch_size = 50
+  M = MaxIter
 )
 iterations <- 500
 ############
 
-## New proposal
-
-adaptive_impl <- cmdstanr::cmdstan_model("stan/adapSum_COMP.stan")
+## Adaptive
+fpath.1 <- "stan/MCMC_COMP_adaptive.stan"
+adaptive_impl <- cmdstanr::cmdstan_model(fpath.1, include_paths = "./stan/")
 
 opt_adaptive <- adaptive_impl$optimize(data = stan.data)
-
 opt_adaptive$mle()
 
 adaptive.raw <-
   adaptive_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
                        parallel_chains = 4, iter_warmup = iterations,
-                       adapt_delta = .90,  max_treedepth = 10,
+                       adapt_delta = .90,  max_treedepth = 12,
                        iter_sampling = iterations, show_messages = FALSE)
 adaptive.mcmc <- stanfit(adaptive.raw)
 
-pairs(adaptive.mcmc, pars = c("mu", "nu"))
+fpath.2 <- "stan/MCMC_COMP_adaptive_guess.stan"
+adaptive_guess_impl <- cmdstanr::cmdstan_model(fpath.2, include_paths = "./stan/")
+
+opt_adaptive_guess <- adaptive_guess_impl$optimize(data = stan.data)
+opt_adaptive_guess$mle()
+
+adaptive_guess.raw <-
+  adaptive_guess_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
+                       parallel_chains = 4, iter_warmup = iterations,
+                       adapt_delta = .90,  max_treedepth = 12,
+                       iter_sampling = iterations, show_messages = FALSE)
+adaptive_guess.mcmc <- stanfit(adaptive_guess.raw)
 
 ## BRMS stuff
-brms_impl <- cmdstanr::cmdstan_model("stan/brms_COMP.stan")
+fpath.3 <- "stan/MCMC_COMP_brms.stan"
+brms_impl <- cmdstanr::cmdstan_model(fpath.3, include_paths = "./stan/")
 
 opt_brms <- brms_impl$optimize(data = stan.data)
 opt_brms$mle()
 
 brms.raw <-
   brms_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
-                     parallel_chains = 4, iter_warmup = iterations,
-                     adapt_delta = .90,  max_treedepth = 12,
-                     iter_sampling = iterations, show_messages = FALSE)
+                   parallel_chains = 4, iter_warmup = iterations,
+                   adapt_delta = .90,  max_treedepth = 12,
+                   iter_sampling = iterations, show_messages = FALSE)
 brms.mcmc <- stanfit(brms.raw)
 
-pairs(brms.mcmc, pars = c("mu", "nu"))
+## brms_bulk
+fpath.4 <- "stan/MCMC_COMP_brms_bulk.stan"
+brms_bulk_impl <- cmdstanr::cmdstan_model(fpath.4, include_paths = "./stan/")
+
+opt_brms_bulk <- brms_bulk_impl$optimize(data = stan.data)
+opt_brms_bulk$mle()
+
+brms_bulk.raw <-
+  brms_bulk_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
+                        parallel_chains = 4, iter_warmup = iterations,
+                        adapt_delta = .90,  max_treedepth = 12,
+                        iter_sampling = iterations, show_messages = FALSE)
+brms_bulk.mcmc <- stanfit(brms_bulk.raw)
+
 
 #### 
 
 adaptive.mcmc
-# adaptive_hybrid.mcmc
+adaptive_guess.mcmc
 brms.mcmc
+brms_bulk.mcmc
 
 check_hmc_diagnostics(adaptive.mcmc)
+check_hmc_diagnostics(adaptive_guess.mcmc)
 check_hmc_diagnostics(brms.mcmc)
+check_hmc_diagnostics(brms_bulk.mcmc)
 
 adaptive.raw$time()
+adaptive_guess.raw$time()
 brms.raw$time()
+brms_bulk.raw$time()
+#### 
+all.mcmcs <- list(
+  adaptive = adaptive.mcmc,
+  adaptive_guess = adaptive_guess.mcmc,
+  brms = brms.mcmc,
+  brms_bulk = brms_bulk.mcmc
+)
+
+nits.df <- reshape2::melt(
+  lapply(all.mcmcs, function(x) extract(x, 'n_iter')$n_iter)
+)
+
+library(ggplot2)
+
+ggplot(nits.df, aes(y = value, colour = L1, fill = L1)) +
+  geom_boxplot(alpha = 0.4) +
+  scale_y_continuous("Number of iterations to approximate logZ") +
+  theme_bw(base_size = 16)

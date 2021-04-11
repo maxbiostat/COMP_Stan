@@ -11,24 +11,23 @@ COMP_lpdf <- function(k, theta){
 }
 #################
 Mu <- 5
-Nu <- 2
+Nu <- .5
 Theta <- c(Mu, Nu)
 Eps <- 1E-16
-M <- 2E5
+M <- 1E5
 if(Nu == 1){
   TrueValue <- Mu  
 }else{
   if(Nu == 2){
     TrueValue <- log(besselI(2*sqrt(Mu), nu = 0))
   }else{
-    lps <- COMP_lpdf(k = 0:M, theta = Theta)
+    lps <- COMP_lpdf(k = 0:(2*M), theta = Theta)
     TrueValue <- matrixStats::logSumExp(lps)
   }
 }
-## Should the approximation kick in ?
-(log(Mu) * Nu >= log(1.5) && log(Mu) >= log(1.5))
 
-implementations <- cmdstanr::cmdstan_model("stan/comp_implementations_testing.stan")
+fpath <- "stan/compare_COMP_implementations.stan"
+implementations <- cmdstanr::cmdstan_model(fpath, include_paths = "./stan/")
 
 test.data <- list(
   log_mu = log(Mu),
@@ -39,16 +38,11 @@ test.data <- list(
 )
 
 raw <- implementations$sample(data = test.data, chains = 1, 
-                              iter_warmup = 0, iter_sampling = 1, fixed_param = TRUE, show_messages = TRUE)
+                              iter_warmup = 0, iter_sampling = 1,
+                              fixed_param = TRUE, show_messages = TRUE)
 results <- stanfit(raw)
 out <- extract(results)
 out$lp__ <- NULL
 
 TrueValue
 out
-
-source("testing_aux.r")
-robust_difference(TrueValue, out$lZ_approx_new)
-robust_difference(TrueValue, out$lZ_brute_force_new[1])
-robust_difference(TrueValue, out$lZ_brute_force_brms[1])
-
