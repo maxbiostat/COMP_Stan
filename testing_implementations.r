@@ -10,8 +10,8 @@ COMP_lpdf <- function(k, theta){
   )
 }
 #################
-Mu <- 5
-Nu <- .5
+Mu <- 1.2
+Nu <- .25
 Theta <- c(Mu, Nu)
 Eps <- 1E-16
 M <- 1E5
@@ -21,7 +21,7 @@ if(Nu == 1){
   if(Nu == 2){
     TrueValue <- log(besselI(2*sqrt(Mu), nu = 0))
   }else{
-    lps <- COMP_lpdf(k = 0:(2*M), theta = Theta)
+    lps <- COMP_lpdf(k = 0:(5*M), theta = Theta)
     TrueValue <- matrixStats::logSumExp(lps)
   }
 }
