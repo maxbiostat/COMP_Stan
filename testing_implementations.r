@@ -21,7 +21,7 @@ if(Nu == 1){
   if(Nu == 2){
     TrueValue <- log(besselI(2*sqrt(Mu), nu = 0))
   }else{
-    lps <- COMP_lpdf(k = 0:(2*M), theta = Theta)
+    lps <- COMP_lpdf(k = 0:(5*M), theta = Theta)
     TrueValue <- matrixStats::logSumExp(lps)
   }
 }
@@ -40,9 +40,13 @@ test.data <- list(
 raw <- implementations$sample(data = test.data, chains = 1, 
                               iter_warmup = 0, iter_sampling = 1,
                               fixed_param = TRUE, show_messages = TRUE)
+
+# print(raw, digits = 20, max_rows = 14)
+
 results <- stanfit(raw)
+
+print(results, digits_summary = 20)
+
 out <- extract(results)
 out$lp__ <- NULL
-
-TrueValue
 out

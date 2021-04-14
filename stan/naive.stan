@@ -23,4 +23,3 @@ real [] log_Z_COMP_naive(real log_mu, real nu, real Eps, int maxIter) {
   }
   return {log_sum_exp(storeVal[:n]), n};
 }
-
