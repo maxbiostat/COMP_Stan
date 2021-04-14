@@ -144,8 +144,8 @@ parse_simu <- function(simu){
   )
 }
 
-true.Mu <- 15
-true.Nu <- .2
+true.Mu <- 5
+true.Nu <- .5
 simu <-  do_batch(n_reps = 10,
                   Mu = true.Mu, Nu = true.Nu, nobs = 1000,
                     epsilon = 1E-16,

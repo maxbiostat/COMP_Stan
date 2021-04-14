@@ -30,6 +30,7 @@ generated quantities {
   real lZ_brms_bulk[2] = log_Z_COMP_brms_bulk(log_mu, nu, eps, M);
   real lZ_adaptive[2] = log_Z_COMP_adaptive(log_mu, nu, eps, M, 0);
   real lZ_GuessAdaptive[2] = log_Z_COMP_GuessAdaptive(log_mu, nu, eps, M, x_r, x_i);
+  real lZ_True = true_value;
   // Computing absolute differences (in natural space)
   real diff_asymp = robust_difference(true_value, lZ_asymp);
   real diff_GuessNaive = robust_difference(true_value, lZ_GuessNaive[1]);

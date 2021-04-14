@@ -10,8 +10,8 @@ COMP_lpdf <- function(k, theta){
   )
 }
 #################
-Mu <- 1.2
-Nu <- .25
+Mu <- 5
+Nu <- .5
 Theta <- c(Mu, Nu)
 Eps <- 1E-16
 M <- 1E5
@@ -40,9 +40,13 @@ test.data <- list(
 raw <- implementations$sample(data = test.data, chains = 1, 
                               iter_warmup = 0, iter_sampling = 1,
                               fixed_param = TRUE, show_messages = TRUE)
+
+# print(raw, digits = 20, max_rows = 14)
+
 results <- stanfit(raw)
+
+print(results, digits_summary = 20)
+
 out <- extract(results)
 out$lp__ <- NULL
-
-TrueValue
 out
