@@ -15,7 +15,6 @@ real[] log_Z_COMP_brms_bulk(real log_mu, real nu, real eps, int M) {
     reject("nu must be finite");
   }
   // first 2 terms of the series
-  // log_Z_terms[1] = log1p_exp(log_mu);
   log_Z_terms[1] = 0;
   log_Z_terms[2] = log_mu;
   while (log_Z_terms[k] >= leps && k < M) {
