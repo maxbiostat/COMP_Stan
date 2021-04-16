@@ -4,11 +4,9 @@ functions{
   #include robust_difference.stan
   #include asymp_approx.stan
   #include naive.stan
-  #include guess_naive.stan
   #include brms.stan
   #include brms_bulk.stan
   #include adaptive.stan
-  #include guess_adaptive.stan
 }
 data{
   real log_mu;
@@ -24,7 +22,6 @@ transformed data {
 generated quantities {
   // Computing the (log) normalising constant
   real lZ_asymp = log_Z_COMP_Asymp(log_mu, nu);
-  real lZ_GuessNaive[2] = log_Z_COMP_GuessNaive(log_mu, nu, eps, M, x_r, x_i);
   real lZ_naive[2] = log_Z_COMP_naive(log_mu, nu, eps, M);
   real lZ_brms[2] = log_Z_COMP_brms(log_mu, nu, eps, M);
   real lZ_brms_bulk[2] = log_Z_COMP_brms_bulk(log_mu, nu, eps, M);
@@ -33,19 +30,15 @@ generated quantities {
   real lZ_True = true_value;
   // Computing absolute differences (in natural space)
   real diff_asymp = robust_difference(true_value, lZ_asymp);
-  real diff_GuessNaive = robust_difference(true_value, lZ_GuessNaive[1]);
   real diff_naive = robust_difference(true_value, lZ_naive[1]);
   real diff_brms = robust_difference(true_value, lZ_brms[1]);
   real diff_brms_bulk = robust_difference(true_value, lZ_brms_bulk[1]);
   real diff_adaptive = robust_difference(true_value, lZ_adaptive[1]);
-  real diff_GuessAdaptive = robust_difference(true_value, lZ_GuessAdaptive[1]);
   // Recording whether the target error was achieved
   int getItRight_asymp = (fabs(diff_asymp) < eps);
-  int getItRight_GuessNaive = (fabs(diff_GuessNaive) < eps);
   int getItRight_naive = (fabs(diff_naive) < eps);
   int getItRight_brms = (fabs(diff_brms) < eps);
   int getItRight_brms_bulk = (fabs(diff_brms_bulk) < eps);
   int getItRight_adaptive = (fabs(diff_adaptive) < eps);
-  int getItRight_GuessAdaptive = (fabs(diff_GuessAdaptive) < eps);
 }
 
