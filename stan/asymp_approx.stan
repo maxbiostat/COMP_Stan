@@ -1,5 +1,5 @@
 /*Asymptotic approximation using four terms using Theorem 1 of Gaunt et al. 2019 */
-real log_Z_COMP_Asymp_new(real log_mu, real nu) {
+real log_Z_COMP_Asymp(real log_mu, real nu) {
   // Asymptotic expansion of Z(mu, nu) with four terms.
   // Based on equations (4) and (31) of doi:10.1007/s10463-017-0629-6
   real nu2 = nu^2;
