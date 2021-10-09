@@ -1,6 +1,6 @@
 functions{
   #include comp_pmf.stan
-  #include naive.stan
+  #include infiniteAdaptive.stan
 }
 data{
   int<lower=0> K;
@@ -13,13 +13,16 @@ data{
   real<lower=0> eps;
   int<lower=0> M;
 }
+transformed data{
+  real logL = log(0);
+}
 parameters{
   real mu;
   real<lower=0> nu;
 }
 transformed parameters{
   real log_mu = log(mu);
-  real log_norm_const[2] = log_Z_COMP_naive(log_mu, nu, eps, M);
+  real log_norm_const[2] = infiniteAdaptive({log_mu, nu}, eps, M, logL, 0);
 }
 model{
   mu ~ gamma(s_mu, r_mu);

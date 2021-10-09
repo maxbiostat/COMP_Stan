@@ -1,0 +1,3 @@
+[submodule "stan_summer"]
+	path = stan_summer
+	url = https://github.com/GuidoAMoreira/stan_summer

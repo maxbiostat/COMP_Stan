@@ -26,14 +26,19 @@ generated quantities {
   real lZ_brms[2] = log_Z_COMP_brms(log_mu, nu, eps, M);
   real lZ_brms_bulk[2] = log_Z_COMP_brms_bulk(log_mu, nu, eps, M);
   real lZ_adaptive[2] = log_Z_COMP_adaptive(log_mu, nu, eps, M, 0);
-  real lZ_GuessAdaptive[2] = log_Z_COMP_GuessAdaptive(log_mu, nu, eps, M, x_r, x_i);
   real lZ_True = true_value;
   // Computing absolute differences (in natural space)
-  real diff_asymp = robust_difference(true_value, lZ_asymp);
-  real diff_naive = robust_difference(true_value, lZ_naive[1]);
-  real diff_brms = robust_difference(true_value, lZ_brms[1]);
-  real diff_brms_bulk = robust_difference(true_value, lZ_brms_bulk[1]);
-  real diff_adaptive = robust_difference(true_value, lZ_adaptive[1]);
+  real diff_asymp = robust_difference(true_value, lZ_asymp, 0);
+  real diff_naive = robust_difference(true_value, lZ_naive[1], 0);
+  real diff_brms = robust_difference(true_value, lZ_brms[1], 0);
+  real diff_brms_bulk = robust_difference(true_value, lZ_brms_bulk[1], 0);
+  real diff_adaptive = robust_difference(true_value, lZ_adaptive[1], 0);
+  // Computing relative differences (in natural space)
+  real rel_diff_asymp = robust_difference(true_value, lZ_asymp, 1);
+  real rel_diff_naive = robust_difference(true_value, lZ_naive[1], 1);
+  real rel_diff_brms = robust_difference(true_value, lZ_brms[1], 1);
+  real rel_diff_brms_bulk = robust_difference(true_value, lZ_brms_bulk[1], 1);
+  real rel_diff_adaptive = robust_difference(true_value, lZ_adaptive[1], 1);
   // Recording whether the target error was achieved
   int getItRight_asymp = (fabs(diff_asymp) < eps);
   int getItRight_naive = (fabs(diff_naive) < eps);

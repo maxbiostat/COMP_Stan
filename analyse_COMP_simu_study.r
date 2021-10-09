@@ -27,7 +27,6 @@ read_ess_rdata <- function(fname){
 }
 ##########
 rdatas <- system("ls data/*.RData", intern = TRUE)
-# fname <- rdatas[1]
 all.res <- do.call(rbind, lapply(rdatas, read_ess_rdata))
 head(all.res)
 all.res$parameterComb <- paste0("mu_", all.res$mu, "_nu_", all.res$nu)

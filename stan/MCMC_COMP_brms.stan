@@ -1,5 +1,6 @@
 functions{
   #include comp_pmf.stan
+  #include infiniteSumToThreshold.stan
   #include brms.stan
 }
 data{
