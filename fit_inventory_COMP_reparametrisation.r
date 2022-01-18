@@ -5,7 +5,7 @@ stanfit <- function(fit) rstan::read_stan_csv(fit$output_files())
 ####
 epsilon <-  1E-16 # .Machine$double.eps
 MaxIter <- 1E4
-Ncutoff <- 3300
+Ncutoff <- 100
 
 inventory <- read.csv("data/Shmuelli_2005.csv")
 
@@ -23,12 +23,13 @@ stan.data <- list(
   y = cY$k,
   s_mu = .01,
   r_mu = .01,
-  nu_sd = 1,
+  s_nu = 0.0625,
+  r_nu = 0.25,
   eps = epsilon,
   M = MaxIter,
   N_max = Ncutoff
 )
-iterations <- 500
+iterations <- 5000
 ############
 
 ## Adaptive
@@ -96,6 +97,13 @@ adaptive.mcmc
 brms.mcmc
 fixed.mcmc
 
+print(adaptive.mcmc, pars = c("mu", "nu", "n_iter"),
+      digits_summary = 3)
+print(brms.mcmc, pars = c("mu", "nu", "n_iter"),
+      digits_summary = 3)
+print(fixed.mcmc, pars = c("mu", "nu", "n_iter"),
+      digits_summary = 3)
+
 check_hmc_diagnostics(adaptive.mcmc)
 check_hmc_diagnostics(brms.mcmc)
 check_hmc_diagnostics(fixed.mcmc)
@@ -105,9 +113,9 @@ brms.raw$time()
 fixed.raw$time()
 
 
-ESS.time.adaptive <- monitor(adaptive.mcmc, print = FALSE)$n_eff[c(1, 2, 7)]/adaptive.raw$time()$total
-ESS.time.brms <- monitor(brms.mcmc, print = FALSE)$n_eff[c(1, 2, 7)]/brms.raw$time()$tota
-ESS.time.fixed <- monitor(fixed.mcmc, print = FALSE)$n_eff[c(1, 2, 6)]/fixed.raw$time()$total
+ESS.time.adaptive <- monitor(adaptive.mcmc, print = FALSE)$n_eff[c(1, 2)]/adaptive.raw$time()$total
+ESS.time.brms <- monitor(brms.mcmc, print = FALSE)$n_eff[c(1, 2)]/brms.raw$time()$tota
+ESS.time.fixed <- monitor(fixed.mcmc, print = FALSE)$n_eff[c(1, 2)]/fixed.raw$time()$total
 
 ESS.time.adaptive
 ESS.time.brms
