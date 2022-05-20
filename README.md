@@ -7,12 +7,11 @@ Approximately compute the normalising constant of a [Conway-Maxwell Poisson](htt
 ## Methods and implementations being compared
 
 - **Asymptotic**: use the asymptotic expansion of [Gaunt et al. 2019](https://ideas.repec.org/a/spr/aistmt/v71y2019i1d10.1007_s10463-017-0629-6.html) with four terms.
-- **Naive**: For a given `eps`, sum until `lterm < log(eps)`;
-- **GuessNaive**: Same rationale as **Naive**, but trying to use the `algebra_solver` to guess how many iterations are needed.
-- **BRMS**: this is based on the implementation [here](https://github.com/paul-buerkner/brms/blob/master/inst/chunks/fun_com_poisson.stan), with bug fixes. Similar to **Naive**, but uses a "tape" implementation whereby the computation is done in batches of `num_terms` terms. Doesn't have the check on the parameters to shortcircuit computations to closed-form or asymptotic approximation when convenient.
-- **BRMS_Bulk**: Slight modification of **BRMS** to do  `log_sum_exp` only once (i.e. "in bulk").
-- **Adaptive**: for a given `eps`, this method guarantees an answer within `eps`. Uses elementary results from convergent series.
-- **GuessAdaptive**: same rationale as **Adaptive** but trying to to use the `algebra_solver` to guess how many iterations are needed.
+- **SumToThreshold**: For a given `eps`, sum until `lterm < log(eps)`;
+- **ErrorBoundingPair**: for a given `eps`, this method guarantees an answer within `eps`. Uses elementary results from convergent series.
+
+See [Carvalho & Moreira (2022)](https://arxiv.org/abs/2202.06121) for more details.
+
 
 ## Criteria for comparison
 
@@ -30,10 +29,9 @@ When doing MCMC we will be looking at
 The first bar to clear is that of correctly returning the answer within the error bound requested.
 Of course, not every method comes with mathematical guarantees (e.g. the asymptotic expansion of Gaunt et al. makes no promises about using finitely many terms).
 It is nevertheless useful to record whether each method/implementation got the answer within a certain tolerance in order to gauge their overall accuracy under many scenarios.
-This can be found in [testing_implementations.r](https://github.com/maxbiostat/COMP_Stan/blob/main/testing_implementations.r).
+This can be found in [testing_implementations_grid.r](https://github.com/maxbiostat/COMP_Stan/blob/main/testing_implementations_grid.r).
 
 ## Step 1: MCMC
 
 The next step is to see what happens when these implementations are actually used in MCMC.
-This is implemented in [fit_simple_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/fit_simple_COMP.r) for a single run and [simu_study_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/simu_study_COMP.r) for a simulation study-style script.
-After a few `.RData` have been accumulated by running the replication code for the desired combinations of parameters, [analyse_COMP_simu_study.r](https://github.com/maxbiostat/COMP_Stan/blob/main/analyse_COMP_simu_study.r) can be used to analyse the results.
+This is implemented in [fit_simple_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/fit_simple_COMP.r).
