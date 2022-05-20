@@ -35,3 +35,4 @@ This can be found in [testing_implementations_grid.r](https://github.com/maxbios
 
 The next step is to see what happens when these implementations are actually used in MCMC.
 This is implemented in [fit_simple_COMP.r](https://github.com/maxbiostat/COMP_Stan/blob/main/fit_simple_COMP.r).
+We provide a real world analysis of inventory data [here](https://github.com/maxbiostat/COMP_Stan/blob/main/fit_inventory_COMP_reparametrisation.r). 
