@@ -15,7 +15,7 @@ compress_counts <- function(x){
 }
 ####
 Mu <- 10
-Nu <- 5
+Nu <- .4
 epsilon <- 1E-16
 MaxIter <- 1E4
 
@@ -41,55 +41,56 @@ stan.data <- list(
 iterations <- 500
 ############
 
-## Adaptive
-fpath.1 <- "stan/MCMC_COMP_adaptive.stan"
-adaptive_impl <- cmdstanr::cmdstan_model(fpath.1,
-                                         include_paths = "./stan/")
+## EB
+fpath.eb <- "stan/MCMC_COMP_ErrorBounding.stan"
+EB_impl <- cmdstanr::cmdstan_model(fpath.eb,
+                                   include_paths = "./stan/")
 
-opt_adaptive <- adaptive_impl$optimize(data = stan.data)
-opt_adaptive$mle()
+opt_EB <- EB_impl$optimize(data = stan.data)
+opt_EB$mle()
 
-adaptive.raw <-
-  adaptive_impl$sample(data = stan.data,
-                       refresh = floor(iterations/5),
-                       chains = 4,
-                       parallel_chains = 4,
-                       iter_warmup = iterations,
-                       adapt_delta = .90,
-                       max_treedepth = 12,
-                       iter_sampling = iterations,
-                       show_messages = FALSE)
-adaptive.mcmc <- stanfit(adaptive.raw)
+EB.raw <-
+  EB_impl$sample(data = stan.data,
+                 refresh = floor(iterations/5),
+                 chains = 4, parallel_chains = 4,
+                 iter_warmup = iterations, iter_sampling = iterations,
+                 adapt_delta = .90, max_treedepth = 12,
+                 show_messages = FALSE)
+EB.mcmc <- stanfit(EB.raw)
 
 ## brms 
-fpath.4 <- "stan/MCMC_COMP_brms.stan"
-brms_impl <- cmdstanr::cmdstan_model(fpath.4, include_paths = "./stan/")
+fpath.thresh <- "stan/MCMC_COMP_Threshold.stan"
+threshold_impl <- cmdstanr::cmdstan_model(fpath.thresh, include_paths = "./stan/")
 
-opt_brms <- brms_impl$optimize(data = stan.data)
-opt_brms$mle()
+opt_threshold <- threshold_impl$optimize(data = stan.data)
+opt_threshold$mle()
 
-brms.raw <-
-  brms_impl$sample(data = stan.data, refresh = floor(iterations/5), chains = 4,
-                        parallel_chains = 4, iter_warmup = iterations,
-                        adapt_delta = .90,  max_treedepth = 12,
-                        iter_sampling = iterations, show_messages = FALSE)
-brms.mcmc <- stanfit(brms.raw)
+threshold.raw <-
+  threshold_impl$sample(data = stan.data,
+                   refresh = floor(iterations/5),
+                   chains = 4, parallel_chains = 4,
+                   iter_warmup = iterations, iter_sampling = iterations,
+                   adapt_delta = .90, max_treedepth = 12,
+                   show_messages = FALSE)
+threshold.mcmc <- stanfit(threshold.raw)
 
 
 #### 
 
-adaptive.mcmc
-brms.mcmc
+EB.mcmc
+threshold.mcmc
 
-check_hmc_diagnostics(adaptive.mcmc)
-check_hmc_diagnostics(brms.mcmc)
+EB.raw$time()
+threshold.raw$time()
 
-adaptive.raw$time()
-brms.raw$time()
+check_hmc_diagnostics(EB.mcmc)
+check_hmc_diagnostics(threshold.mcmc)
+
+
 #### 
 all.mcmcs <- list(
-  adaptive = adaptive.mcmc,
-  brms = brms.mcmc
+  EB = EB.mcmc,
+  ST = threshold.mcmc
 )
 
 nits.df <- reshape2::melt(

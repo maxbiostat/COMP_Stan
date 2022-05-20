@@ -1,6 +1,7 @@
 functions{
-  #include comp_2_pmf.stan
-  #include infiniteAdaptive.stan
+  #include comp_pmf.stan
+  #include infiniteErrorBoundingPairs.stan
+  #include ErrorBounding.stan
 }
 data{
   int<lower=0> K;
@@ -9,28 +10,24 @@ data{
   int<lower=0> N;
   real<lower=0> s_mu;
   real<lower=0> r_mu;
-  real<lower=0> s_nu;
-  real<lower=0> r_nu;
+  real<lower=0> nu_sd;
   real<lower=0> eps;
   int<lower=0> M;
 }
-transformed data{
-  real logL = log(0);
-}
 parameters{
-  real<lower=0> mu;
+  real mu;
   real<lower=0> nu;
 }
 transformed parameters{
   real log_mu = log(mu);
-  real log_norm_const[2] = infiniteAdaptive({log_mu, nu}, eps, M, logL, 0);
+  real log_norm_const[2] = log_Z_COMP_EB(log_mu, nu, eps, M);
 }
 model{
   mu ~ gamma(s_mu, r_mu);
-  nu ~ gamma(s_nu, r_nu); // Benson & Friel (2021)
+  nu ~ normal(0, nu_sd);
   // Likelihood
   for(k in 1:K){
-  target += n[k] * COM_Poisson_2_lpmf(y[k] | log_mu, nu, log_norm_const[1]);
+    target += n[k] * COM_Poisson_lpmf(y[k] | log_mu, nu, log_norm_const[1]);
   } 
 }
 generated quantities{

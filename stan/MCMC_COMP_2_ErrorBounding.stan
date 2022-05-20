@@ -1,7 +1,6 @@
 functions{
   #include comp_2_pmf.stan
-  #include infiniteSumToThreshold.stan
-  #include brms_2.stan
+  #include infiniteErrorBoundingPairs.stan
 }
 data{
   int<lower=0> K;
@@ -15,20 +14,23 @@ data{
   real<lower=0> eps;
   int<lower=0> M;
 }
+transformed data{
+  real logL = log(0);
+}
 parameters{
-  real mu;
+  real<lower=0> mu;
   real<lower=0> nu;
 }
 transformed parameters{
   real log_mu = log(mu);
-  real log_norm_const[2] = log_Z_COMP_2_brms(log_mu, nu, eps, M);
+  real log_norm_const[2] = infiniteErrorBoundingPairs({log_mu, nu}, eps, M, logL, 0);
 }
 model{
   mu ~ gamma(s_mu, r_mu);
   nu ~ gamma(s_nu, r_nu); // Benson & Friel (2021)
   // Likelihood
   for(k in 1:K){
-    target += n[k] * COM_Poisson_2_lpmf(y[k] | log_mu, nu, log_norm_const[1]);
+  target += n[k] * COM_Poisson_2_lpmf(y[k] | log_mu, nu, log_norm_const[1]);
   } 
 }
 generated quantities{
