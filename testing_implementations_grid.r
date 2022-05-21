@@ -59,9 +59,25 @@ compare_implementations <- function(Mu, Nu, Eps, M){
                              below_tolerance = out$getItRight_errorBounding,
                              method = "errorBounding")
   
+  res.brms <- data.frame(logZ = out$lZ_brms[1],
+                          niter = out$lZ_brms[2],
+                          error = out$diff_brms,
+                          relative_error = out$rel_diff_brms,
+                          below_tolerance = out$getItRight_brms,
+                          method = "brms")
+  
+  res.brms_bulk <- data.frame(logZ = out$lZ_brms_bulk[1],
+                         niter = out$lZ_brms_bulk[2],
+                         error = out$diff_brms_bulk,
+                         relative_error = out$rel_diff_brms_bulk,
+                         below_tolerance = out$getItRight_brms_bulk,
+                         method = "brms_bulk")
+  
   ans <- do.call(rbind, list(res.asymp,
                              res.threshold,
-                             res.errorBounding))
+                             res.errorBounding,
+                             res.brms,
+                             res.brms_bulk))
   ### 
   ans$mu <- Mu
   ans$nu <- Nu
@@ -74,15 +90,14 @@ compare_implementations <- function(Mu, Nu, Eps, M){
 epsilons <- 10^(-(1:20))
 mus <- c(0.1, 0.2, 0.5, 1, 1.5, 2, 5, 10, 15, 50, 100, 500)
 nus <- c(0.1, 0.2, 0.5, 1, 1.5, 2, 5)
-
 grid <- expand.grid(epsilon = epsilons, mu = mus, nu = nus)
 
 comp.time <- system.time(
-  all.res <- lapply(1:nrow(grid), function(i){
+  all.res <- parallel::mclapply(1:nrow(grid), function(i){
     compare_implementations(Mu = grid[i,]$mu,
                             Nu = grid[i,]$nu,
                             Eps = grid[i,]$epsilon, M = 1E5)
-  })
+  }, mc.cores = 8)
 )
 comp.time
 

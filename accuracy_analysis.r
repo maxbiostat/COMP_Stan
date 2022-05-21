@@ -12,7 +12,7 @@ names(comp)
 
 ## Methods: Gaunt (NA values), Naive, Old_brms, New_brms, Adaptive
 
-for (mtd in c("ST", "errorBounding")){
+for (mtd in c("ST", "errorBounding", "brms", "brms_bulk")){
   g <- ggplot(na.omit(comp) %>% filter(method == mtd),
               aes(y = as.factor(mu), x = as.factor(nu))) + theme_bw()+
     geom_tile(aes(fill = as.factor(below_tolerance),
@@ -34,5 +34,7 @@ comp %>%
   group_by(eps) %>%
   summarise(gaunt = mean(below_tolerance[method == "Gaunt"]),
             naive = mean(below_tolerance[method == "ST"]),
-            adaptive = mean(below_tolerance[method == "errorBounding"])) %>%
+            adaptive = mean(below_tolerance[method == "errorBounding"]),
+            brms = mean(below_tolerance[method == "brms"]),
+            brms_bulk = mean(below_tolerance[method == "brms_bulk"])) %>%
   ungroup()

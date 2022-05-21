@@ -8,13 +8,14 @@ Nu <- .5
 epsilon <- 1E-16
 MaxIter <- 1E4
 
-##
-nobs <- 1000
-# set.seed(666)
-Y <- COMPoissonReg::rcmp(n = nobs, lambda = Mu, nu = Nu)
-hist(Y, probability = TRUE)
+inventory <- read.csv("data/Shmuelli_2005.csv")
 
-cY <- compress_counts(Y)
+nobs <- sum(inventory$frequency)
+cY <- list(
+  k = inventory$count,
+  n = inventory$frequency,
+  K = nrow(inventory)
+)
 
 stan.data <- list(
   K = cY$K,

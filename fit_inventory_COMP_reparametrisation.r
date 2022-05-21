@@ -1,7 +1,7 @@
 library(COMPoissonReg)
 library(cmdstanr)
 library(rstan)
-stanfit <- function(fit) rstan::read_stan_csv(fit$output_files())
+source("aux.r")
 ####
 epsilon <-  1E-16 # .Machine$double.eps
 MaxIter <- 1E4
