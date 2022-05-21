@@ -9,6 +9,8 @@ Approximately compute the normalising constant of a [Conway-Maxwell Poisson](htt
 - **Asymptotic**: use the asymptotic expansion of [Gaunt et al. 2019](https://ideas.repec.org/a/spr/aistmt/v71y2019i1d10.1007_s10463-017-0629-6.html) with four terms.
 - **SumToThreshold**: For a given `eps`, sum until `lterm < log(eps)`;
 - **ErrorBoundingPair**: for a given `eps`, this method guarantees an answer within `eps`. Uses elementary results from convergent series.
+- **bmrs**: similar to the [current implementation]( https://github.com/paul-buerkner/brms/blob/master/inst/chunks/fun_com_poisson.stan) in brms with bug fixes and a bit of streamlining.
+- **brms_bulk** similar to the above, but summing everything at once, 'in bulk'.
 
 See [Carvalho & Moreira (2022)](https://arxiv.org/abs/2202.06121) for more details.
 
