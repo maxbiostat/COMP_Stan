@@ -1,5 +1,5 @@
 # COMP Stan
-Implementing the Conway-Maxwell Poisson distribution in Stan.
+Implementing the Conway-Maxwell Poisson distribution in Stan. Code uses [stan_summer](https://github.com/GuidoAMoreira/stan_summer) as a submodule. 
 
 ## Goal
 Approximately compute the normalising constant of a [Conway-Maxwell Poisson](https://en.wikipedia.org/wiki/Conway%E2%80%93Maxwell%E2%80%93Poisson_distribution) distribution with parameters `mu` and `nu`. 
